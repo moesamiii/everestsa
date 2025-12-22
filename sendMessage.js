@@ -4,7 +4,7 @@ const axios = require("axios");
 const token =
   "EAAbQizSjTpwBQWjiJZCCWQ3kFF52zFLlUdiXnfZBGEntkgLiQZAJ4RgiZBTrR6NIQBh3kXi3PIgoV29eepupbSw23pTvZAS7hGRdoDYWdzOocQEnt75Bg4ZB9JeaZABlWXrCxuoDewArd74XObnLZBO2aTXm0FJCWC7tkZCKO5qD11PcZA212GVSZAt4FVXRXpI4Cvjs6SdLbgaqVnZAmWaOiXxjpiF5K1QcOo6qWDUJ0SyA";
 
-const phoneNumberId = "786972071168893"; // ✅ Phone Number ID الصحيح
+const phoneNumberId = "891522684049711"; // ✅ Phone Number ID الصحيح
 const recipient = "962785050875"; // ✅ رقمك الدولي بعد التفعيل
 
 async function sendMessage() {
