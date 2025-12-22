@@ -1,5 +1,5 @@
 /**
- * webhookHandler.js (FINAL FIXED VERSION)
+ * webhookHandler.js (FINAL — STABLE VERSION)
  *
  * Responsibilities:
  * - Verify webhook
@@ -11,7 +11,7 @@
 
 const { askAI, sendTextMessage, sendAppointmentOptions } = require("./helpers");
 
-// ⚠️ FIXED — media functions must come from mediaService.js
+// Media functions
 const {
   sendLocationMessages,
   sendOffersImages,
@@ -19,10 +19,10 @@ const {
   sendOffersValidity,
 } = require("./mediaService");
 
-// ⚠️ FIXED — ban words functions come from contentFilter.js
+// Ban words
 const { containsBanWords, sendBanWordsResponse } = require("./contentFilter");
 
-// ✔ detection helpers stay in messageHandlers.js
+// Detection helpers
 const {
   isLocationRequest,
   isOffersRequest,
@@ -71,11 +71,23 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
     try {
       const body = req.body;
 
-      const message =
-        body.entry?.[0]?.changes?.[0]?.value?.messages?.[0] || null;
+      // 🔍 Extract safely
+      const entry = body.entry?.[0];
+      const change = entry?.changes?.[0];
+      const value = change?.value;
 
-      if (!message) return res.sendStatus(200);
+      if (!value) {
+        console.log("ℹ️ Webhook event without value");
+        return res.sendStatus(200);
+      }
 
+      // Ignore non-message events (statuses, delivery receipts, etc.)
+      if (!value.messages) {
+        console.log("ℹ️ Non-message webhook event received");
+        return res.sendStatus(200);
+      }
+
+      const message = value.messages[0];
       const from = message.from;
       const text = message.text?.body?.trim() || null;
 
@@ -83,7 +95,7 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
       const tempBookings = (global.tempBookings = global.tempBookings || {});
 
       // -----------------------------------------------------
-      // 🎙️ AUDIO → sent to audio processor
+      // 🎙️ AUDIO
       // -----------------------------------------------------
       if (message.type === "audio") {
         await handleAudioMessage(message, from);
@@ -99,12 +111,15 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
       }
 
       // -----------------------------------------------------
-      // 📨 Ignore Non-Text Messages
+      // 📨 Ignore non-text messages
       // -----------------------------------------------------
-      if (!text) return res.sendStatus(200);
+      if (!text) {
+        console.log("ℹ️ Message has no text");
+        return res.sendStatus(200);
+      }
 
       // -----------------------------------------------------
-      // 👋 Greeting detection
+      // 👋 GREETING
       // -----------------------------------------------------
       if (isGreeting(text)) {
         const reply = getGreeting(isEnglish(text));
@@ -113,7 +128,7 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
       }
 
       // -----------------------------------------------------
-      // 🚫 Ban Words
+      // 🚫 BAN WORDS
       // -----------------------------------------------------
       if (containsBanWords(text)) {
         const lang = isEnglish(text) ? "en" : "ar";
@@ -145,7 +160,6 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
         return res.sendStatus(200);
       }
 
-      // User confirmed he wants the offers
       if (session.waitingForOffersConfirmation) {
         if (isOffersConfirmation(text)) {
           session.waitingForOffersConfirmation = false;
@@ -172,14 +186,12 @@ function registerWebhookRoutes(app, VERIFY_TOKEN) {
       // -----------------------------------------------------
       if (isCancelRequest(text)) {
         session.waitingForCancelPhone = true;
-
         delete tempBookings[from];
 
         await askForCancellationPhone(from);
         return res.sendStatus(200);
       }
 
-      // Waiting for phone number to cancel
       if (session.waitingForCancelPhone) {
         const phone = text.replace(/\D/g, "");
 

@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const { registerWebhookRoutes } = require("./webhookHandler");
-const { detectSheetName, getAllBookings } = require("./helpers");
+const { getAllBookings } = require("./databaseHelper"); // ✅ FIXED
 
 const app = express();
 app.use(bodyParser.json());
@@ -22,13 +22,6 @@ console.log("🚀 Server starting...");
 console.log("✅ VERIFY_TOKEN loaded:", !!VERIFY_TOKEN);
 console.log("✅ WHATSAPP_TOKEN loaded:", !!WHATSAPP_TOKEN);
 console.log("✅ PHONE_NUMBER_ID loaded:", PHONE_NUMBER_ID || "❌ Not found");
-
-// Detect sheet name on startup (if used)
-try {
-  detectSheetName();
-} catch (err) {
-  console.error("⚠️ detectSheetName() failed:", err.message);
-}
 
 // ---------------------------------------------
 // Global booking memory
